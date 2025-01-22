@@ -17,8 +17,8 @@ use cocoa::{
     },
     base::{id, nil},
     foundation::{
-        NSArray, NSAutoreleasePool, NSDictionary, NSFastEnumeration, NSInteger, NSPoint, NSRect,
-        NSSize, NSString, NSUInteger,
+        NSArray, NSAutoreleasePool, NSDictionary, NSFastEnumeration, NSInteger, NSNotFound,
+        NSPoint, NSRect, NSSize, NSString, NSUInteger,
     },
 };
 use core_graphics::display::{CGDirectDisplayID, CGPoint, CGRect};
@@ -221,6 +221,11 @@ unsafe fn build_classes() {
         decl.add_method(
             sel!(acceptsFirstMouse:),
             accepts_first_mouse as extern "C" fn(&Object, Sel, id) -> BOOL,
+        );
+
+        decl.add_method(
+            sel!(characterIndexForPoint:),
+            character_index_for_point as extern "C" fn(&Object, Sel, NSPoint) -> u64,
         );
 
         decl.register()
@@ -1825,6 +1830,23 @@ extern "C" fn accepts_first_mouse(this: &Object, _: Sel, _: id) -> BOOL {
     let mut lock = window_state.as_ref().lock();
     lock.first_mouse = true;
     YES
+}
+
+extern "C" fn character_index_for_point(this: &Object, _: Sel, position: NSPoint) -> u64 {
+    let window_state = unsafe { get_window_state(this) };
+    let lock = window_state.as_ref().lock();
+    let mut position = convert_mouse_position(position, lock.content_size().height);
+    println!("position: {:?}", position);
+    position -= lock.bounds().origin;
+    position.y -= lock.titlebar_height();
+    println!("position: {:?}", position);
+    drop(lock);
+
+    with_input_handler(this, |input_handler| {
+        input_handler.character_index_for_point(position)
+    })
+    .flatten()
+    .map_or(NSNotFound as u64, |index| index as u64)
 }
 
 extern "C" fn dragging_entered(this: &Object, _: Sel, dragging_info: id) -> NSDragOperation {

@@ -1,4 +1,6 @@
-use crate::{Bounds, InputHandler, Pixels, UTF16Selection, View, ViewContext, WindowContext};
+use crate::{
+    Bounds, InputHandler, Pixels, Point, UTF16Selection, View, ViewContext, WindowContext,
+};
 use std::ops::Range;
 
 /// Implement this trait to allow views to handle textual input when implementing an editor, field, etc.
@@ -53,6 +55,13 @@ pub trait ViewInputHandler: 'static + Sized {
         element_bounds: Bounds<Pixels>,
         cx: &mut ViewContext<Self>,
     ) -> Option<Bounds<Pixels>>;
+
+    /// See [`InputHandler::character_index_for_point`] for details
+    fn character_index_for_point(
+        &mut self,
+        position: Point<Pixels>,
+        cx: &mut ViewContext<Self>,
+    ) -> Option<usize>;
 }
 
 /// The canonical implementation of [`PlatformInputHandler`]. Call [`WindowContext::handle_input`]
@@ -136,5 +145,14 @@ impl<V: ViewInputHandler> InputHandler for ElementInputHandler<V> {
         self.view.update(cx, |view, cx| {
             view.bounds_for_range(range_utf16, self.element_bounds, cx)
         })
+    }
+
+    fn character_index_for_point(
+        &mut self,
+        position: Point<Pixels>,
+        cx: &mut WindowContext,
+    ) -> Option<usize> {
+        self.view
+            .update(cx, |view, cx| view.character_index_for_point(position, cx))
     }
 }

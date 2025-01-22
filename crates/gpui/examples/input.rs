@@ -345,6 +345,16 @@ impl ViewInputHandler for TextInput {
             ),
         ))
     }
+
+    fn character_index_for_point(
+        &mut self,
+        position: Point<Pixels>,
+        _cx: &mut ViewContext<Self>,
+    ) -> Option<usize> {
+        self.last_layout
+            .as_ref()
+            .map(|line| line.closest_index_for_x(position.x))
+    }
 }
 
 struct TextElement {

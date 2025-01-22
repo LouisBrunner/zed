@@ -709,6 +709,14 @@ impl PlatformInputHandler {
             .flatten()
     }
 
+    #[cfg_attr(target_os = "macos", allow(dead_code))]
+    fn character_index_for_point(&mut self, position: Point<Pixels>) -> Option<usize> {
+        self.cx
+            .update(|cx| self.handler.character_index_for_point(position, cx))
+            .ok()
+            .flatten()
+    }
+
     #[cfg_attr(any(target_os = "linux", target_os = "freebsd"), allow(dead_code))]
     fn text_for_range(
         &mut self,
@@ -872,6 +880,14 @@ pub trait InputHandler: 'static {
     fn apple_press_and_hold_enabled(&mut self) -> bool {
         true
     }
+
+    /// Get the index in the document of the character pointed by the given screen position.
+    #[allow(dead_code)]
+    fn character_index_for_point(
+        &mut self,
+        position: Point<Pixels>,
+        cx: &mut WindowContext,
+    ) -> Option<usize>;
 }
 
 /// The variables that can be configured when creating a new window

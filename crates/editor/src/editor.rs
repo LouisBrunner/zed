@@ -14739,6 +14739,28 @@ impl ViewInputHandler for Editor {
             size: size(em_width, line_height),
         })
     }
+
+    fn character_index_for_point(
+        &mut self,
+        position: gpui::Point<Pixels>,
+        cx: &mut ViewContext<Self>,
+    ) -> Option<usize> {
+        let gpui::Point {
+            x: em_width,
+            y: line_height,
+        } = self.character_size(cx);
+
+        let snapshot = self.snapshot(cx);
+        let scroll_position = snapshot.scroll_position();
+
+        let x = position.x - self.gutter_dimensions.width - self.gutter_dimensions.margin;
+        let y = position.y;
+
+        let row = (x / em_width + scroll_position.x).floor() as usize;
+        let col = (y / line_height + scroll_position.y).floor() as usize;
+        println!("x: {}, y: {}", row, col);
+        None
+    }
 }
 
 trait SelectionExt {
